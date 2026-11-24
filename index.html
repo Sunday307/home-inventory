@@ -137,7 +137,7 @@ nav .dot{position:absolute;top:4px;left:calc(50% + 6px);background:var(--red);co
 .code button{border:0;background:none;color:var(--red);width:32px;height:32px}
 .quick{text-align:center}.quick .big-q{font-size:44px;font-weight:900;line-height:1.1}.quick .big-q small{font-size:16px;color:var(--mute);margin-left:4px}
 .pick{display:flex;flex-direction:column;gap:6px;max-height:40vh;overflow:auto;margin:8px 0}
-.pick button{text-align:left;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 12px;min-height:44px}
+.pick button{flex:none;text-align:left;line-height:1.4;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 12px;min-height:44px}
 .pick small{color:var(--mute)}
 .estimate{margin:10px 0 0;font-size:16px}.estimate b{font-size:22px}.estimate small{color:var(--mute);font-size:13px;margin-left:6px}
 .spend{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
@@ -761,11 +761,14 @@ function onFound(code) {
 }
 function bindPick() {
   const d = draft, q = (d.q || '').toLowerCase();
-  const list = S.items.filter(i => !q || (i.name + ' ' + (i.category || '')).toLowerCase().includes(q)).slice(0, 40);
+  const list = S.items.filter(i => !q || (i.name + ' ' + (i.category || '')).toLowerCase().includes(q))
+    .sort((a, b) => (isLow(b) - isLow(a)) || a.name.localeCompare(b.name, 'zh-Hant')).slice(0, 40);
   openModal('<h3>這個條碼還沒綁定</h3><p class="sample" style="margin-top:0">條碼 <b>' + esc(d.code) + '</b>。綁到現有用品，之後一掃就找得到。</p>' +
     '<button class="btn dark wide" data-act="newFromCode">＋ 新增成新的用品</button>' +
     '<label class="f"><span>或綁到現有用品</span><input class="in" id="bindq" value="' + esc(d.q) + '" placeholder="輸入名稱篩選"></label>' +
-    '<div class="pick">' + list.map(i => '<button data-bindto="' + i.id + '">' + esc(i.name) + ' <small>' + esc(i.category || '') + '・' + esc(locText(i)) + '</small></button>').join('') + '</div>' +
+    '<div class="pick">' + list.map((i, n) => (n === 0 && isLow(i) ? '<p class="sample" style="margin:2px 0 0">需補貨（剛買回來的多半在這裡）</p>' : '') +
+      (n > 0 && isLow(list[n - 1]) && !isLow(i) ? '<p class="sample" style="margin:8px 0 0">其他用品</p>' : '') +
+      '<button data-bindto="' + i.id + '"' + (isLow(i) ? ' style="border-color:var(--red)"' : '') + '>' + (isLow(i) ? '<b style="color:var(--red)">' + esc(i.name) + '</b>' : esc(i.name)) + ' <small>' + esc(i.category || '') + '・' + esc(locText(i)) + '</small></button>').join('') + '</div>' +
     '<div class="row"><button class="btn" data-act="close">取消</button></div>');
 }
 function quickItem(id) {
